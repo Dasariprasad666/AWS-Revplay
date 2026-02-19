@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "albums")
@@ -27,6 +28,8 @@ public class Album {
 
     @Column(name = "cover_image_url")
     private String coverImageUrl;
+    @OneToMany(mappedBy = "album")
+    private List<Song> songs;
 
     public Album() {}
 
@@ -48,4 +51,6 @@ public class Album {
 
     public String getCoverImageUrl() { return coverImageUrl; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
+    public List<Song> getSongs() { return songs; }
+    public void setSongs(List<Song> songs) { this.songs = songs; }
 }
