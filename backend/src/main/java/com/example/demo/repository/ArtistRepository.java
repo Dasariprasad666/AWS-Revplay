@@ -14,6 +14,5 @@ public interface ArtistRepository extends JpaRepository<Artist, Long> {
 
     // Finds an artist profile based on the logged-in user account
     Optional<Artist> findByUser(User user);
-
     Optional<Artist> findByUser_Email(String email);
 }

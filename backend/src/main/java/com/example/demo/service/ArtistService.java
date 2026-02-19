@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.ArtistProfileRequest;
-import com.example.demo.dto.ArtistStatsResponse;
+import com.example.demo.dto.*;
 import com.example.demo.entity.Artist;
 import com.example.demo.entity.Song;
 import com.example.demo.entity.User;
@@ -14,13 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ArtistService {
 
     private final ArtistRepository artistRepository;
     private final UserRepository userRepository;
-    private final SongRepository songRepository; // Auto-wired from Dev 1's work
+    private final SongRepository songRepository;
 
     public ArtistService(ArtistRepository artistRepository, UserRepository userRepository, SongRepository songRepository) {
         this.artistRepository = artistRepository;
@@ -30,19 +30,14 @@ public class ArtistService {
 
     @Transactional
     public String setupOrUpdateArtistProfile(String email, ArtistProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // 1. Upgrade the User's role to ARTIST so Spring Security grants them new permissions
         if (!"ARTIST".equals(user.getRole())) {
             user.setRole("ARTIST");
             userRepository.save(user);
         }
 
-        // 2. Find their existing profile, or create a new one if it doesn't exist yet
-        Optional<Artist> existingArtist = artistRepository.findByUser(user);
-        Artist artist = existingArtist.orElseGet(Artist::new);
-
+        Artist artist = artistRepository.findByUser(user).orElseGet(Artist::new);
         artist.setUser(user);
         artist.setBio(request.getBio());
         artist.setGenre(request.getGenre());
@@ -53,35 +48,60 @@ public class ArtistService {
         return "Artist profile successfully updated!";
     }
 
+    public ArtistPublicResponse getPublicProfile(Long artistId) {
+        Artist artist = artistRepository.findById(artistId).orElseThrow(() -> new ResourceNotFoundException("Artist not found"));
+        return mapToPublicResponse(artist);
+    }
+
+    public ArtistPublicResponse getMyProfile(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Artist artist = artistRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException("Profile not setup"));
+        return mapToPublicResponse(artist);
+    }
+
     public ArtistStatsResponse getArtistAnalytics(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Artist artist = artistRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException("Artist profile not found."));
 
-        Artist artist = artistRepository.findByUser(user)
-                .orElseThrow(() -> new ResourceNotFoundException("Artist profile not found. Please set up your profile first."));
-
-        // Fetch all songs created by this artist using Dev 1's repository
         List<Song> artistSongs = songRepository.findByArtist(artist);
-
         ArtistStatsResponse response = new ArtistStatsResponse();
         response.setArtistName(user.getName());
         response.setGenre(artist.getGenre());
 
-        // Calculate the analytics!
         if (artistSongs != null && !artistSongs.isEmpty()) {
             response.setTotalSongsUploaded(artistSongs.size());
+            response.setTotalAllTimePlays(artistSongs.stream().mapToLong(s -> s.getPlayCount() != null ? s.getPlayCount() : 0).sum());
 
-            // Sum up the play counts of every song the artist has published
-            long totalPlays = artistSongs.stream()
-                    .mapToLong(song -> song.getPlayCount() != null ? song.getPlayCount() : 0)
-                    .sum();
-            response.setTotalAllTimePlays(totalPlays);
+            // Get Top Songs sorted by play count descending
+            List<SongPerformanceDTO> topSongs = artistSongs.stream()
+                    .sorted((s1, s2) -> Long.compare(s2.getPlayCount() != null ? s2.getPlayCount() : 0, s1.getPlayCount() != null ? s1.getPlayCount() : 0))
+                    .limit(10) // Show top 10
+                    .map(song -> {
+                        SongPerformanceDTO dto = new SongPerformanceDTO();
+                        dto.setSongId(song.getSongId());
+                        dto.setTitle(song.getTitle());
+                        dto.setPlayCount(song.getPlayCount() != null ? song.getPlayCount() : 0);
+                        return dto;
+                    }).collect(Collectors.toList());
+
+            response.setTopSongs(topSongs);
         } else {
-            // New artists start at zero
             response.setTotalSongsUploaded(0);
             response.setTotalAllTimePlays(0L);
         }
 
+        return response;
+    }
+
+    private ArtistPublicResponse mapToPublicResponse(Artist artist) {
+        ArtistPublicResponse response = new ArtistPublicResponse();
+        response.setArtistId(artist.getArtistId());
+        response.setName(artist.getUser().getName());
+        response.setProfilePictureUrl(artist.getUser().getProfilePictureUrl());
+        response.setBio(artist.getBio());
+        response.setGenre(artist.getGenre());
+        response.setBannerImageUrl(artist.getBannerImageUrl());
+        response.setSocialLinks(artist.getSocialLinks());
         return response;
     }
 }
