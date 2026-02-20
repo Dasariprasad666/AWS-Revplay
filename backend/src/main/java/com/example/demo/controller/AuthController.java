@@ -10,6 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:4200") // 👈 CRITICAL: Allows Angular to connect
 public class AuthController {
 
     private final AuthService authService;
@@ -18,7 +19,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // Endpoint: POST http://localhost:8080/api/auth/register
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         try {
@@ -29,10 +29,10 @@ public class AuthController {
         }
     }
 
-    // Endpoint: POST http://localhost:8080/api/auth/login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
+            // This Map should contain {"token": "...", "role": "..."}
             Map<String, String> response = authService.loginUser(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
