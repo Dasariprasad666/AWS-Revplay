@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.entity.Artist;
 import com.example.demo.entity.History;
 import com.example.demo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,19 +14,17 @@ import java.util.List;
 
 @Repository
 public interface HistoryRepository extends JpaRepository<History, Long> {
-
-    // Existing: Find complete history for a specific user
     List<History> findByUser_UserIdOrderByPlayedAtDesc(Long userId);
-
-    // NEW: Find Top 50 recent history for a specific user
     List<History> findTop50ByUser_UserIdOrderByPlayedAtDesc(Long userId);
+    List<History> findByUser_UserIdAndPlaylist_PlaylistIdOrderByPlayedAtDesc(Long userId, Long playlistId);
 
-    // NEW: Clear all history for a specific user
     @Modifying
     @Transactional
     void deleteByUser(User user);
 
-    // NEW: Calculate total listening time (Priority 4 Requirement)
     @Query("SELECT COALESCE(SUM(s.duration), 0) FROM History h JOIN h.song s WHERE h.user = :user")
     Long calculateTotalListeningTimeInSeconds(@Param("user") User user);
+
+    // --- NEW: For Artist Analytics ---
+    List<History> findBySong_Artist(Artist artist);
 }
