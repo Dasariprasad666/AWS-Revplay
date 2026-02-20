@@ -18,40 +18,48 @@ public class HistoryController {
         this.historyService = historyService;
     }
 
-    // EXISTING: POST: http://localhost:8080/api/history/log?songId=1
+    // UPDATED: Accepts an optional playlistId as a query parameter
+    // Example: POST http://localhost:8080/api/history/log?songId=5&playlistId=1
     @PostMapping("/log")
-    public ResponseEntity<String> logPlay(@RequestParam Long songId, Authentication authentication) {
+    public ResponseEntity<String> logPlay(@RequestParam Long songId,
+                                          @RequestParam(required = false) Long playlistId,
+                                          Authentication authentication) {
         String email = authentication.getName();
-        historyService.logSongPlay(email, songId);
-        // Returning as a JSON string so the Angular frontend can parse it easily!
+        historyService.logSongPlay(email, songId, playlistId);
         return ResponseEntity.ok("{\"message\": \"Song play logged successfully.\"}");
     }
 
-    // NEW FEATURE: GET: http://localhost:8080/api/history/recent
-    // Fetches only the last 50 played songs
+    // Existing: Get recent 50 history
     @GetMapping("/recent")
     public ResponseEntity<List<HistoryDTO>> getRecentHistory(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(historyService.getRecentHistory(email));
     }
 
-    // UPDATED: GET: http://localhost:8080/api/history/all
-    // Fetches the entire listening history with timestamps
+    // Existing: Get complete history
     @GetMapping("/all")
     public ResponseEntity<List<HistoryDTO>> getCompleteHistory(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(historyService.getCompleteHistory(email));
     }
 
-    // NEW FEATURE: DELETE: http://localhost:8080/api/history/clear
-    // Wipes the listening history for privacy
+    // --- NEW: Get Playlist-Specific History ---
+    @GetMapping("/playlist/{playlistId}")
+    public ResponseEntity<List<HistoryDTO>> getPlaylistHistory(@PathVariable Long playlistId,
+                                                               Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(historyService.getPlaylistHistory(email, playlistId));
+    }
+
+    // Existing: Clear History
     @DeleteMapping("/clear")
     public ResponseEntity<String> clearHistory(Authentication authentication) {
         String email = authentication.getName();
         historyService.clearHistory(email);
         return ResponseEntity.ok("{\"message\": \"Listening history cleared successfully.\"}");
     }
-    // NEW FEATURE: GET: http://localhost:8080/api/history/stats/time
+
+    // Existing: Total Listening Time
     @GetMapping("/stats/time")
     public ResponseEntity<String> getTotalTime(Authentication authentication) {
         String email = authentication.getName();

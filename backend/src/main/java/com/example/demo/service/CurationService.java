@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.PlaylistRequest;
 import com.example.demo.dto.PlaylistResponse;
+import com.example.demo.dto.SongDTO;
 import com.example.demo.entity.*;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.*;
@@ -45,17 +46,42 @@ public class CurationService {
             return "Song removed from favorites.";
         } else {
             Favorite favorite = new Favorite();
-
-            // Handled automatically by @IdClass
             favorite.setUser(user);
             favorite.setSong(song);
-
             favoriteRepository.save(favorite);
             return "Song added to favorites!";
         }
     }
 
+    public List<SongDTO> getMyFavorites(String email) {
+        User user = getUser(email);
+        return favoriteRepository.findByUser(user).stream()
+                .map(favorite -> mapSongToDTO(favorite.getSong()))
+                .collect(Collectors.toList());
+    }
+
+    public long getFavoritesCount(String email) {
+        User user = getUser(email);
+        return favoriteRepository.countByUser(user);
+    }
+
     // --- 2. PLAYLIST CRUD LOGIC ---
+    public PlaylistResponse getPlaylistById(Long playlistId) {
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new ResourceNotFoundException("Playlist not found"));
+
+        PlaylistResponse response = mapToResponse(playlist);
+
+        List<PlaylistSong> playlistSongs = playlistSongRepository.findByPlaylistOrderBySongOrderAsc(playlist);
+
+        List<SongDTO> songDTOs = playlistSongs.stream()
+                .map(ps -> mapSongToDTO(ps.getSong()))
+                .collect(Collectors.toList());
+
+        response.setSongs(songDTOs);
+        return response;
+    }
+
     @Transactional
     public PlaylistResponse createPlaylist(String email, PlaylistRequest request) {
         Playlist playlist = new Playlist();
@@ -103,10 +129,9 @@ public class CurationService {
         }
 
         PlaylistSong ps = new PlaylistSong();
-
-        // FIX: Handled automatically by @IdClass. No need for manual ID generation.
         ps.setPlaylist(playlist);
         ps.setSong(song);
+        ps.setSongOrder(1);
 
         playlistSongRepository.save(ps);
         return "Song added to playlist!";
@@ -124,7 +149,7 @@ public class CurationService {
         return "Song removed from playlist.";
     }
 
-    // --- 4. FOLLOW PLAYLIST LOGIC ---
+    // --- 4. FOLLOW / UNFOLLOW PLAYLIST LOGIC (TOGGLE) ---
     @Transactional
     public String toggleFollowPlaylist(String email, Long playlistId) {
         User user = getUser(email);
@@ -138,15 +163,14 @@ public class CurationService {
         Optional<FollowedPlaylist> existing = followedPlaylistRepository.findByUserAndPlaylist(user, playlist);
 
         if (existing.isPresent()) {
+            // Unfollow Action
             followedPlaylistRepository.delete(existing.get());
             return "Unfollowed playlist.";
         } else {
+            // Follow Action
             FollowedPlaylist follow = new FollowedPlaylist();
-
-            // FIX: Handled automatically by @IdClass
             follow.setUser(user);
             follow.setPlaylist(playlist);
-
             followedPlaylistRepository.save(follow);
             return "Successfully followed playlist!";
         }
@@ -172,14 +196,26 @@ public class CurationService {
 
     private PlaylistResponse mapToResponse(Playlist playlist) {
         PlaylistResponse response = new PlaylistResponse();
-
-        // FIX: Changed to getPlaylistId() to match your new Playlist entity
         response.setPlaylistId(playlist.getPlaylistId());
-
         response.setName(playlist.getName());
         response.setDescription(playlist.getDescription());
         response.setPrivacy(playlist.getPrivacy());
         response.setCreatorName(playlist.getUser().getName());
         return response;
+    }
+
+    private SongDTO mapSongToDTO(Song song) {
+        SongDTO dto = new SongDTO();
+        dto.setSongId(song.getSongId());
+        dto.setTitle(song.getTitle());
+        dto.setGenre(song.getGenre());
+        dto.setDuration(song.getDuration());
+        dto.setPlayCount(song.getPlayCount());
+        dto.setAudioFileUrl(song.getAudioFileUrl());
+        dto.setCoverImageUrl(song.getCoverImageUrl());
+        if (song.getArtist() != null && song.getArtist().getUser() != null) {
+            dto.setArtistName(song.getArtist().getUser().getName());
+        }
+        return dto;
     }
 }

@@ -1,8 +1,5 @@
 package com.example.demo.dto;
 
-
-
-
 import java.time.LocalDateTime;
 
 public class HistoryDTO {
@@ -11,6 +8,10 @@ public class HistoryDTO {
     private String artistName;
     private String coverImageUrl;
     private LocalDateTime playedAt;
+
+    // --- NEW: Playlist context ---
+    private Long playlistId;
+    private String playlistName;
 
     // --- Getters and Setters ---
     public Long getHistoryId() { return historyId; }
@@ -27,4 +28,10 @@ public class HistoryDTO {
 
     public LocalDateTime getPlayedAt() { return playedAt; }
     public void setPlayedAt(LocalDateTime playedAt) { this.playedAt = playedAt; }
+
+    public Long getPlaylistId() { return playlistId; }
+    public void setPlaylistId(Long playlistId) { this.playlistId = playlistId; }
+
+    public String getPlaylistName() { return playlistName; }
+    public void setPlaylistName(String playlistName) { this.playlistName = playlistName; }
 }
