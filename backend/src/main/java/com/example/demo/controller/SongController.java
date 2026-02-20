@@ -1,7 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.SongDTO;
+import com.example.demo.service.FileStorageService;
 import com.example.demo.service.SongService;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,12 +17,14 @@ import java.util.List;
 public class SongController {
 
     private final SongService songService;
+    private final FileStorageService fileStorageService; // 👈 NEW: Added File Storage Service
 
-    public SongController(SongService songService) {
+    // 👈 NEW: Updated constructor to include FileStorageService
+    public SongController(SongService songService, FileStorageService fileStorageService) {
         this.songService = songService;
+        this.fileStorageService = fileStorageService;
     }
 
-    // --- PUBLIC ENDPOINTS (Listeners) ---
     @GetMapping
     public ResponseEntity<List<SongDTO>> getAllSongs() {
         return ResponseEntity.ok(songService.getAllSongs());
@@ -45,31 +49,26 @@ public class SongController {
         return ResponseEntity.ok(songService.filterSongs(genre, artistName, albumName, releaseYear));
     }
 
-    // --- SECURED ENDPOINTS (Artists Only) ---
-
-    // View your own uploaded songs
     @GetMapping("/my-songs")
     public ResponseEntity<List<SongDTO>> getMyUploadedSongs(Authentication authentication) {
         return ResponseEntity.ok(songService.getMyUploadedSongs(authentication.getName()));
     }
 
-    // Upload a new song (Requires Multipart Form Data for files)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SongDTO> uploadSong(
             Authentication authentication,
             @RequestParam("title") String title,
             @RequestParam("genre") String genre,
-            @RequestParam("duration") Integer duration,
+            @RequestParam(value = "duration", required = false, defaultValue = "0") Integer duration,
             @RequestParam(value = "visibility", defaultValue = "PUBLIC") String visibility,
             @RequestParam(value = "albumId", required = false) Long albumId,
-            @RequestParam("audioFile") MultipartFile audioFile,
+            @RequestParam("file") MultipartFile audioFile,
             @RequestParam(value = "coverImage", required = false) MultipartFile coverImage) {
 
         return ResponseEntity.ok(songService.uploadSong(
                 authentication.getName(), title, genre, duration, visibility, albumId, audioFile, coverImage));
     }
 
-    // Update song details
     @PutMapping("/{songId}")
     public ResponseEntity<SongDTO> updateSong(
             Authentication authentication,
@@ -81,10 +80,21 @@ public class SongController {
         return ResponseEntity.ok(songService.updateSong(authentication.getName(), songId, title, genre, visibility));
     }
 
-    // Delete a song
     @DeleteMapping("/{songId}")
     public ResponseEntity<String> deleteSong(Authentication authentication, @PathVariable Long songId) {
         songService.deleteSong(authentication.getName(), songId);
         return ResponseEntity.ok("{\"message\": \"Song deleted successfully.\"}");
+    }
+
+    // --- NEW: Audio Streaming Endpoint ---
+    // The "{fileName:.+}" syntax ensures it doesn't cut off file extensions like ".mp3"
+    @GetMapping("/play/{fileName:.+}")
+    public ResponseEntity<Resource> playAudio(@PathVariable String fileName) {
+        Resource resource = fileStorageService.loadFileAsResource(fileName);
+
+        // This tells the browser "Hey, get ready to play an audio file!"
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("audio/mpeg"))
+                .body(resource);
     }
 }

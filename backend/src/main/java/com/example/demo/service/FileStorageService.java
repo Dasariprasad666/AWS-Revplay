@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +49,21 @@ public class FileStorageService {
             } catch (IOException e) {
                 System.err.println("Failed to delete physical file: " + fileName);
             }
+        }
+    }
+
+    // --- NEW: Method to load the file so it can be streamed to the frontend ---
+    public Resource loadFileAsResource(String fileName) {
+        try {
+            Path filePath = Paths.get(UPLOAD_DIR).resolve(fileName).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists()) {
+                return resource;
+            } else {
+                throw new RuntimeException("File not found: " + fileName);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading file: " + fileName, e);
         }
     }
 }

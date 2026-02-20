@@ -13,7 +13,6 @@ import java.util.List;
 public interface SongRepository extends JpaRepository<Song, Long> {
     List<Song> findByArtist(Artist artist);
 
-    // --- UPDATED: Enforce Visibility Rules ---
     List<Song> findByVisibility(String visibility);
     List<Song> findByTitleContainingIgnoreCaseAndVisibility(String title, String visibility);
 

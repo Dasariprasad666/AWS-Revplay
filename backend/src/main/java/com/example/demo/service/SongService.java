@@ -36,7 +36,6 @@ public class SongService {
         this.fileStorageService = fileStorageService;
     }
 
-    // --- UPDATED: Only return PUBLIC songs for general users ---
     public List<SongDTO> getAllSongs() {
         return songRepository.findByVisibility("PUBLIC").stream().map(this::mapToDTO).collect(Collectors.toList());
     }
@@ -51,7 +50,6 @@ public class SongService {
                 .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
-    // (The rest of your existing methods remain untouched below)
     public SongDTO getSongById(Long songId) {
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
@@ -69,7 +67,8 @@ public class SongService {
                               String visibility, Long albumId, MultipartFile audioFile, MultipartFile coverImage) {
         Artist artist = getArtistByEmail(email);
         String audioFileName = fileStorageService.storeFile(audioFile);
-        String coverImageName = fileStorageService.storeFile(coverImage);
+
+        String coverImageName = coverImage != null ? fileStorageService.storeFile(coverImage) : null;
 
         if (audioFileName == null) {
             throw new RuntimeException("Audio file is required!");
@@ -78,7 +77,8 @@ public class SongService {
         Song song = new Song();
         song.setTitle(title);
         song.setGenre(genre);
-        song.setDuration(duration);
+
+        song.setDuration(duration != null ? duration : 0);
         song.setVisibility(visibility != null ? visibility : "PUBLIC");
         song.setArtist(artist);
         song.setAudioFileUrl(audioFileName);
@@ -124,13 +124,24 @@ public class SongService {
         }
 
         fileStorageService.deleteFile(song.getAudioFileUrl());
-        fileStorageService.deleteFile(song.getCoverImageUrl());
+        if(song.getCoverImageUrl() != null) {
+            fileStorageService.deleteFile(song.getCoverImageUrl());
+        }
         songRepository.delete(song);
     }
 
+    // 👈 THIS IS THE METHOD THAT WAS UPDATED!
     private Artist getArtistByEmail(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return artistRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException("You must create an Artist Profile first!"));
+
+        // Try to find the artist profile. If it doesn't exist, auto-create it!
+        return artistRepository.findByUser(user).orElseGet(() -> {
+            System.out.println("Auto-creating blank Artist profile for: " + email);
+            Artist newArtist = new Artist();
+            newArtist.setUser(user); // Link it to the current user
+            // Save and return the newly created profile so the upload can continue
+            return artistRepository.save(newArtist);
+        });
     }
 
     private SongDTO mapToDTO(Song song) {
