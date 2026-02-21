@@ -23,7 +23,7 @@ public class HistoryService {
     private final HistoryRepository historyRepository;
     private final UserRepository userRepository;
     private final SongRepository songRepository;
-    private final PlaylistRepository playlistRepository; // NEW
+    private final PlaylistRepository playlistRepository;
 
     public HistoryService(HistoryRepository historyRepository, UserRepository userRepository,
                           SongRepository songRepository, PlaylistRepository playlistRepository) {
@@ -33,7 +33,6 @@ public class HistoryService {
         this.playlistRepository = playlistRepository;
     }
 
-    // UPDATED: Now accepts an optional playlistId
     @Transactional
     public void logSongPlay(String email, Long songId, Long playlistId) {
         User user = userRepository.findByEmail(email)
@@ -42,15 +41,14 @@ public class HistoryService {
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
 
-        song.setPlayCount(song.getPlayCount() + 1);
+        // Increment the total play count for the song
+        song.setPlayCount((song.getPlayCount() != null ? song.getPlayCount() : 0) + 1);
         songRepository.save(song);
 
-        History history = new History();
-        history.setUser(user);
-        history.setSong(song);
-        history.setPlayedAt(LocalDateTime.now());
+        // Create the history record using our convenience constructor
+        History history = new History(user, song);
 
-        // --- NEW: Link playlist if provided ---
+        // Link playlist if provided
         if (playlistId != null) {
             Playlist playlist = playlistRepository.findById(playlistId).orElse(null);
             history.setPlaylist(playlist);
@@ -59,7 +57,6 @@ public class HistoryService {
         historyRepository.save(history);
     }
 
-    // Existing: Get complete listening history
     public List<HistoryDTO> getCompleteHistory(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -68,7 +65,6 @@ public class HistoryService {
                 .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
-    // Existing: Get recent 50 songs
     public List<HistoryDTO> getRecentHistory(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -77,7 +73,6 @@ public class HistoryService {
                 .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
-    // --- NEW: Get Playlist-Specific History ---
     public List<HistoryDTO> getPlaylistHistory(String email, Long playlistId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -86,7 +81,6 @@ public class HistoryService {
                 .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
-    // Existing: Clear history
     @Transactional
     public void clearHistory(String email) {
         User user = userRepository.findByEmail(email)
@@ -94,12 +88,14 @@ public class HistoryService {
         historyRepository.deleteByUser(user);
     }
 
-    // Existing: Calculate total listening time
     public String getTotalListeningTime(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Long totalSeconds = historyRepository.calculateTotalListeningTimeInSeconds(user);
+
+        // Handle null case safely
+        if (totalSeconds == null || totalSeconds == 0) return "0 minutes";
 
         long minutes = totalSeconds / 60;
         if (minutes < 60) {
@@ -111,19 +107,24 @@ public class HistoryService {
         }
     }
 
-    // UPDATED: DTO Mapper to include Playlist Data
+    // DTO Mapper
     private HistoryDTO mapToDTO(History history) {
         HistoryDTO dto = new HistoryDTO();
         dto.setHistoryId(history.getHistoryId());
-        dto.setSongTitle(history.getSong().getTitle());
-        dto.setCoverImageUrl(history.getSong().getCoverImageUrl());
-        dto.setPlayedAt(history.getPlayedAt());
 
-        if (history.getSong().getArtist() != null && history.getSong().getArtist().getUser() != null) {
-            dto.setArtistName(history.getSong().getArtist().getUser().getName());
+        // Safety checks in case a song was deleted
+        if (history.getSong() != null) {
+            dto.setSongId(history.getSong().getSongId()); // Good practice to include the ID
+            dto.setSongTitle(history.getSong().getTitle());
+            dto.setCoverImageUrl(history.getSong().getCoverImageUrl());
+
+            if (history.getSong().getArtist() != null && history.getSong().getArtist().getUser() != null) {
+                dto.setArtistName(history.getSong().getArtist().getUser().getName());
+            }
         }
 
-        // --- NEW: Map playlist data if it exists ---
+        dto.setPlayedAt(history.getPlayedAt());
+
         if (history.getPlaylist() != null) {
             dto.setPlaylistId(history.getPlaylist().getPlaylistId());
             dto.setPlaylistName(history.getPlaylist().getName());

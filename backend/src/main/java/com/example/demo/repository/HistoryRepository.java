@@ -14,9 +14,15 @@ import java.util.List;
 
 @Repository
 public interface HistoryRepository extends JpaRepository<History, Long> {
+
     List<History> findByUser_UserIdOrderByPlayedAtDesc(Long userId);
+
     List<History> findTop50ByUser_UserIdOrderByPlayedAtDesc(Long userId);
+
     List<History> findByUser_UserIdAndPlaylist_PlaylistIdOrderByPlayedAtDesc(Long userId, Long playlistId);
+
+    // ADDED: Generic count method just in case we need total raw play counts
+    long countByUser(User user);
 
     @Modifying
     @Transactional

@@ -35,6 +35,12 @@ public class History {
 
     public History() {}
 
+    // ADDED: Convenience constructor for easily saving new history logs
+    public History(User user, Song song) {
+        this.user = user;
+        this.song = song;
+    }
+
     // --- Getters and Setters ---
     public Long getHistoryId() { return historyId; }
     public void setHistoryId(Long historyId) { this.historyId = historyId; }

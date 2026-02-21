@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 
 public class HistoryDTO {
     private Long historyId;
+
+    // ADDED: songId so the frontend can easily play the song again
+    private Long songId;
+
     private String songTitle;
     private String artistName;
     private String coverImageUrl;
@@ -16,6 +20,10 @@ public class HistoryDTO {
     // --- Getters and Setters ---
     public Long getHistoryId() { return historyId; }
     public void setHistoryId(Long historyId) { this.historyId = historyId; }
+
+    // ADDED: Getters and Setters for songId
+    public Long getSongId() { return songId; }
+    public void setSongId(Long songId) { this.songId = songId; }
 
     public String getSongTitle() { return songTitle; }
     public void setSongTitle(String songTitle) { this.songTitle = songTitle; }

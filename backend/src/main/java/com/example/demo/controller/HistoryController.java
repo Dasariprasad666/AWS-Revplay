@@ -18,7 +18,7 @@ public class HistoryController {
         this.historyService = historyService;
     }
 
-    // UPDATED: Accepts an optional playlistId as a query parameter
+    // Accepts an optional playlistId as a query parameter
     // Example: POST http://localhost:8080/api/history/log?songId=5&playlistId=1
     @PostMapping("/log")
     public ResponseEntity<String> logPlay(@RequestParam Long songId,
@@ -29,21 +29,21 @@ public class HistoryController {
         return ResponseEntity.ok("{\"message\": \"Song play logged successfully.\"}");
     }
 
-    // Existing: Get recent 50 history
+    // Get recent 50 history
     @GetMapping("/recent")
     public ResponseEntity<List<HistoryDTO>> getRecentHistory(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(historyService.getRecentHistory(email));
     }
 
-    // Existing: Get complete history
+    // Get complete history
     @GetMapping("/all")
     public ResponseEntity<List<HistoryDTO>> getCompleteHistory(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(historyService.getCompleteHistory(email));
     }
 
-    // --- NEW: Get Playlist-Specific History ---
+    // Get Playlist-Specific History
     @GetMapping("/playlist/{playlistId}")
     public ResponseEntity<List<HistoryDTO>> getPlaylistHistory(@PathVariable Long playlistId,
                                                                Authentication authentication) {
@@ -51,7 +51,7 @@ public class HistoryController {
         return ResponseEntity.ok(historyService.getPlaylistHistory(email, playlistId));
     }
 
-    // Existing: Clear History
+    // Clear History
     @DeleteMapping("/clear")
     public ResponseEntity<String> clearHistory(Authentication authentication) {
         String email = authentication.getName();
@@ -59,7 +59,7 @@ public class HistoryController {
         return ResponseEntity.ok("{\"message\": \"Listening history cleared successfully.\"}");
     }
 
-    // Existing: Total Listening Time
+    // Total Listening Time
     @GetMapping("/stats/time")
     public ResponseEntity<String> getTotalTime(Authentication authentication) {
         String email = authentication.getName();
