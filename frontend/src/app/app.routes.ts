@@ -6,7 +6,8 @@ import { UploadSong } from './features/music/upload-song/upload-song';
 import { Favorites } from './features/favorites/favorites'; 
 import { MyMusic } from './features/music/my-music/my-music'; 
 import { Playlists } from './features/playlists/playlists/playlists';
-import { PlaylistDetail } from './features/playlists/playlist-detail/playlist-detail'; // 🌟 NEW: Import Playlist Detail
+import { PlaylistDetail } from './features/playlists/playlist-detail/playlist-detail'; 
+import { Profile } from './features/profile/profile/profile'; //  NEW: Import Profile
 
 import { authGuard } from './core/guards/auth/auth-guard';  
 import { artistGuard } from './core/guards/artist/artist-guard';  
@@ -19,9 +20,10 @@ export const routes: Routes = [
   { path: 'home', component: Home, canActivate: [authGuard] }, 
   { path: 'favorites', component: Favorites, canActivate: [authGuard] }, 
   { path: 'playlists', component: Playlists, canActivate: [authGuard] },
-  
-  //  NEW: Dynamic route for looking inside a specific playlist
   { path: 'playlists/:id', component: PlaylistDetail, canActivate: [authGuard] }, 
+  
+  // NEW: Protected Profile route
+  { path: 'profile', component: Profile, canActivate: [authGuard] }, 
   
   // Protected by artistGuard (must be logged in AND an ARTIST)
   { path: 'upload', component: UploadSong, canActivate: [artistGuard] },
