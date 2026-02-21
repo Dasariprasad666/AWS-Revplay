@@ -7,7 +7,8 @@ import { Favorites } from './features/favorites/favorites';
 import { MyMusic } from './features/music/my-music/my-music'; 
 import { Playlists } from './features/playlists/playlists/playlists';
 import { PlaylistDetail } from './features/playlists/playlist-detail/playlist-detail'; 
-import { Profile } from './features/profile/profile/profile'; //  NEW: Import Profile
+import { DiscoverPlaylists } from './features/playlists/discover-playlists/discover-playlists'; //  NEW: Import Discover Playlists
+import { Profile } from './features/profile/profile/profile'; 
 
 import { authGuard } from './core/guards/auth/auth-guard';  
 import { artistGuard } from './core/guards/artist/artist-guard';  
@@ -20,9 +21,13 @@ export const routes: Routes = [
   { path: 'home', component: Home, canActivate: [authGuard] }, 
   { path: 'favorites', component: Favorites, canActivate: [authGuard] }, 
   { path: 'playlists', component: Playlists, canActivate: [authGuard] },
+  
+  //  NEW: Protected Discover route
+  { path: 'discover', component: DiscoverPlaylists, canActivate: [authGuard] }, 
+  
   { path: 'playlists/:id', component: PlaylistDetail, canActivate: [authGuard] }, 
   
-  // NEW: Protected Profile route
+  // Protected Profile route
   { path: 'profile', component: Profile, canActivate: [authGuard] }, 
   
   // Protected by artistGuard (must be logged in AND an ARTIST)
