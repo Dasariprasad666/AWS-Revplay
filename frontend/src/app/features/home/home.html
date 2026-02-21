@@ -73,7 +73,12 @@
           </div>
 
           <p class="artist-name">{{ song.artistName || 'Unknown Artist' }}</p>
-          <span class="genre-badge">{{ song.genre }}</span>
+          
+          <div class="song-stats">
+            <span class="genre-badge">{{ song.genre }}</span>
+            <span class="play-count"> {{ song.playCount || 0 }}</span>
+          </div>
+          
         </div>
       </div>
     </div>

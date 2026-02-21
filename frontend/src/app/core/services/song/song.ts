@@ -36,43 +36,41 @@ export class Song {
     return this.http.get<any[]>(`${this.apiUrl}/filter?genre=${genre}`, { headers });
   }
 
-  // --- NEW: Toggle Like on a Song ---
   toggleLike(songId: number): Observable<boolean> {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     return this.http.post<boolean>(`${this.apiUrl}/${songId}/like`, {}, { headers });
   }
 
-  // --- NEW: Get all Liked Songs ---
   getLikedSongs(): Observable<any[]> {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     return this.http.get<any[]>(`${this.apiUrl}/liked`, { headers });
   }
 
-  // --- NEW: ARTIST MANAGEMENT ENDPOINTS ---
-
-  // 1. Get only the songs uploaded by the logged-in artist
   getMyUploadedSongs(): Observable<any[]> {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     return this.http.get<any[]>(`${this.apiUrl}/my-songs`, { headers });
   }
 
-  // 2. Delete a song
   deleteSong(songId: number): Observable<any> {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    // Expecting text response because your backend returns a String message
     return this.http.delete(`${this.apiUrl}/${songId}`, { headers, responseType: 'text' as 'json' });
   }
 
-  // 3. Update a song's details
   updateSong(songId: number, title: string, genre: string, visibility: string): Observable<any> {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    // Your backend expects these as RequestParams (Query Parameters)
     const url = `${this.apiUrl}/${songId}?title=${encodeURIComponent(title)}&genre=${encodeURIComponent(genre)}&visibility=${encodeURIComponent(visibility)}`;
     return this.http.put(url, {}, { headers });
+  }
+
+  // --- NEW: Increment Play Count ---
+  incrementPlayCount(songId: number): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return this.http.post(`${this.apiUrl}/${songId}/increment-play`, {}, { headers, responseType: 'text' as 'json' });
   }
 }

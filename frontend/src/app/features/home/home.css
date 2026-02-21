@@ -202,7 +202,7 @@ h3 {
 
 .artist-name { 
   color: #b3b3b3; 
-  margin: 0 0 15px 0; 
+  margin: 0 0 10px 0; 
   font-size: 0.9rem; 
 }
 
@@ -282,4 +282,20 @@ audio {
 .music-player-bar::after {
   content: '';
   width: 25%;
+}
+
+/* --- NEW: Song Stats Layout --- */
+.song-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.play-count {
+  color: #b3b3b3;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }

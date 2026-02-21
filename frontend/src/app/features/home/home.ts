@@ -39,20 +39,20 @@ export class Home implements OnInit {
 
   fetchSongs() {
     this.songService.getAllSongs().subscribe({
-      next: (data: any[]) => { // 👈 FIX: Added : any[]
+      next: (data: any[]) => {
         this.songs = data;
         console.log('Successfully loaded songs:', this.songs);
       },
-      error: (err: any) => console.error('Failed to load songs:', err) // 👈 FIX: Added : any
+      error: (err: any) => console.error('Failed to load songs:', err)
     });
   }
 
   fetchLikedSongs() {
     this.songService.getLikedSongs().subscribe({
-      next: (data: any[]) => { // 👈 FIX: Added : any[]
-        this.likedSongIds = new Set(data.map((song: any) => song.songId)); // 👈 FIX: Added (song: any)
+      next: (data: any[]) => {
+        this.likedSongIds = new Set(data.map((song: any) => song.songId));
       },
-      error: (err: any) => console.error('Failed to load liked songs:', err) // 👈 FIX: Added : any
+      error: (err: any) => console.error('Failed to load liked songs:', err)
     });
   }
 
@@ -60,14 +60,14 @@ export class Home implements OnInit {
     event.stopPropagation(); 
     
     this.songService.toggleLike(songId).subscribe({
-      next: (isLiked: boolean) => { // 👈 FIX: Added : boolean
+      next: (isLiked: boolean) => {
         if (isLiked) {
           this.likedSongIds.add(songId);
         } else {
           this.likedSongIds.delete(songId);
         }
       },
-      error: (err: any) => console.error('Failed to toggle like:', err) // 👈 FIX: Added : any
+      error: (err: any) => console.error('Failed to toggle like:', err)
     });
   }
 
@@ -81,8 +81,8 @@ export class Home implements OnInit {
       return;
     }
     this.songService.searchSongsByTitle(this.searchQuery).subscribe({
-      next: (data: any[]) => this.songs = data, // 👈 FIX: Added : any[]
-      error: (err: any) => console.error('Search failed:', err) // 👈 FIX: Added : any
+      next: (data: any[]) => this.songs = data,
+      error: (err: any) => console.error('Search failed:', err)
     });
   }
 
@@ -92,8 +92,8 @@ export class Home implements OnInit {
       return;
     }
     this.songService.filterSongsByGenre(this.selectedGenre).subscribe({
-      next: (data: any[]) => this.songs = data, // 👈 FIX: Added : any[]
-      error: (err: any) => console.error('Filter failed:', err) // 👈 FIX: Added : any
+      next: (data: any[]) => this.songs = data,
+      error: (err: any) => console.error('Filter failed:', err)
     });
   }
 
@@ -103,9 +103,17 @@ export class Home implements OnInit {
     this.fetchSongs();
   }
 
+  // --- NEW: Play Song updates play count ---
   playSong(song: any) {
     console.log('Playing:', song.title);
     this.currentSong = song;
+
+    this.songService.incrementPlayCount(song.songId).subscribe({
+      next: () => {
+        song.playCount = (song.playCount || 0) + 1; // Instant UI update
+      },
+      error: (err: any) => console.error('Failed to update play count:', err)
+    });
   }
 
   getAudioUrl(fileName: string): string {
