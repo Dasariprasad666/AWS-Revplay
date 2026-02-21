@@ -60,6 +60,7 @@ public class CurationService {
                 .collect(Collectors.toList());
     }
 
+    // 🌟 RESTORED: This fixes the build error in your FavoriteController!
     public long getFavoritesCount(String email) {
         User user = getUser(email);
         return favoriteRepository.countByUser(user);
