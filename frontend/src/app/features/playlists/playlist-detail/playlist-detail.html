@@ -1,0 +1,50 @@
+<div class="playlist-detail-container" *ngIf="playlistData">
+  
+  <header class="detail-header">
+    <div class="header-icon">🎧</div>
+    <div class="header-info">
+      <span class="privacy-badge">{{ playlistData.privacy }} PLAYLIST</span>
+      <h1>{{ playlistData.name }}</h1>
+      <p class="description">{{ playlistData.description }}</p>
+      <p class="meta">Created by <strong>{{ playlistData.creatorName }}</strong> • {{ playlistData.songs?.length || 0 }} songs</p>
+    </div>
+    <button routerLink="/playlists" class="back-btn">Back to Playlists</button>
+  </header>
+
+  <div class="songs-section">
+    
+    <div *ngIf="!playlistData.songs || playlistData.songs.length === 0" class="empty-state">
+      <p>This playlist is empty. Go discover some music!</p>
+      <button routerLink="/home" class="explore-btn">Explore Music</button>
+    </div>
+
+    <div class="song-list" *ngIf="playlistData.songs?.length > 0">
+      <div class="song-row" *ngFor="let song of playlistData.songs; let i = index" (click)="playSong(song)">
+        
+        <div class="song-left">
+          <span class="song-index">{{ i + 1 }}</span>
+          <img [src]="getCoverImageUrl(song.coverImageUrl)" class="row-img" alt="Cover">
+          <div class="song-info">
+            <h4>{{ song.title }}</h4>
+            <p>{{ song.artistName || 'Unknown Artist' }}</p>
+          </div>
+        </div>
+        
+        <div class="song-right">
+          <span class="genre-badge">{{ song.genre }}</span>
+          <button class="remove-btn" (click)="removeSong($event, song.songId)" title="Remove from playlist">✖</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="music-player-bar" *ngIf="currentSong">
+    <div class="now-playing-info">
+      <h4>{{ currentSong.title }}</h4>
+      <p>{{ currentSong.artistName || 'Unknown Artist' }}</p>
+    </div>
+    <audio controls autoplay [src]="getAudioUrl(currentSong.audioFileUrl)"></audio>
+  </div>
+
+</div>

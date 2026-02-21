@@ -284,7 +284,7 @@ audio {
   width: 25%;
 }
 
-/* --- NEW: Song Stats Layout --- */
+/* --- Song Stats Layout --- */
 .song-stats {
   display: flex;
   justify-content: space-between;
@@ -298,4 +298,116 @@ audio {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+/* --- NEW: Action Buttons (Add + Heart) --- */
+.card-actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.add-btn {
+  background: none;
+  border: none;
+  color: #b3b3b3;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.3s ease;
+  padding: 0;
+}
+
+.add-btn:hover {
+  color: #1DB954;
+  transform: scale(1.2);
+}
+
+/* --- NEW: Add to Playlist Modal --- */
+.modal-overlay { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.8); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 2000; 
+}
+
+.modal-content { 
+  background: #181818; 
+  padding: 30px; 
+  border-radius: 10px; 
+  width: 400px; 
+  border: 1px solid #333; 
+}
+
+.modal-content h2 { 
+  margin-top: 0; 
+  color: #1DB954; 
+  margin-bottom: 5px; 
+}
+
+.modal-subtitle { 
+  color: #b3b3b3; 
+  margin-bottom: 20px; 
+  font-size: 0.95rem; 
+}
+
+.modal-subtitle strong { 
+  color: white; 
+}
+
+.no-playlists {
+  color: #b3b3b3;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.playlist-list {
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  max-height: 250px; 
+  overflow-y: auto; 
+  margin-bottom: 20px;
+}
+
+.playlist-item-btn {
+  background: #282828; 
+  color: white; 
+  border: 1px solid #333; 
+  padding: 15px; 
+  border-radius: 8px;
+  text-align: left; 
+  font-size: 1rem; 
+  cursor: pointer; 
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.playlist-item-btn:hover { 
+  background: #333; 
+  border-color: #1DB954; 
+}
+
+.modal-actions { 
+  display: flex; 
+  justify-content: flex-end; 
+}
+
+.cancel-btn { 
+  background: transparent; 
+  color: white; 
+  border: 1px solid white; 
+  padding: 10px 20px; 
+  border-radius: 20px; 
+  cursor: pointer; 
+  transition: 0.3s; 
+}
+
+.cancel-btn:hover { 
+  background: white; 
+  color: black; 
 }

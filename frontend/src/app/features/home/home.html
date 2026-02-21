@@ -14,6 +14,10 @@
          My Uploads
       </button>
 
+      <button routerLink="/playlists" class="upload-btn">
+        🎧 Playlists
+      </button>
+
       <button routerLink="/favorites" class="upload-btn">
         ❤️ Favorites
       </button>
@@ -62,14 +66,19 @@
         </div>
 
         <div class="song-info">
+          
           <div class="song-title-row">
             <h4>{{ song.title }}</h4>
-            <button 
-              class="heart-btn" 
-              [class.liked]="isLiked(song.songId)" 
-              (click)="toggleLike($event, song.songId)">
-              {{ isLiked(song.songId) ? '♥' : '♡' }}
-            </button>
+            
+            <div class="card-actions">
+              <button class="add-btn" (click)="openPlaylistModal($event, song)" title="Add to Playlist">➕</button>
+              <button 
+                class="heart-btn" 
+                [class.liked]="isLiked(song.songId)" 
+                (click)="toggleLike($event, song.songId)">
+                {{ isLiked(song.songId) ? '♥' : '♡' }}
+              </button>
+            </div>
           </div>
 
           <p class="artist-name">{{ song.artistName || 'Unknown Artist' }}</p>
@@ -91,6 +100,27 @@
     </div>
     
     <audio controls autoplay [src]="getAudioUrl(currentSong.audioFileUrl)"></audio>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showPlaylistModal">
+    <div class="modal-content">
+      <h2>Add to Playlist</h2>
+      <p class="modal-subtitle">Select a playlist for: <strong>{{ selectedSongForPlaylist?.title }}</strong></p>
+      
+      <div *ngIf="myPlaylists.length === 0" class="no-playlists">
+        You don't have any playlists yet! Go to the Playlists tab to create one.
+      </div>
+
+      <div class="playlist-list" *ngIf="myPlaylists.length > 0">
+        <button class="playlist-item-btn" *ngFor="let playlist of myPlaylists" (click)="addToPlaylist(playlist.playlistId)">
+          🎧 {{ playlist.name }}
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" (click)="closePlaylistModal()">Cancel</button>
+      </div>
+    </div>
   </div>
 
 </div>
