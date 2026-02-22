@@ -2,9 +2,11 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AlbumDTO;
 import com.example.demo.service.AlbumService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,48 +20,51 @@ public class AlbumController {
         this.albumService = albumService;
     }
 
-    // NEW: Get All Albums (Public Feed)
     @GetMapping
     public ResponseEntity<List<AlbumDTO>> getAllAlbums() {
         return ResponseEntity.ok(albumService.getAllAlbums());
     }
 
-    // --- View a single album and its tracklist (Public) ---
     @GetMapping("/{albumId}")
     public ResponseEntity<AlbumDTO> getAlbumById(@PathVariable Long albumId) {
         return ResponseEntity.ok(albumService.getAlbumById(albumId));
     }
 
-    // --- Create Album (Artist Only) ---
-    @PostMapping
-    public ResponseEntity<AlbumDTO> createAlbum(@RequestBody AlbumDTO dto,
-                                                Authentication authentication) {
+    // UPDATED: Consumes Multipart Data
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AlbumDTO> createAlbum(
+            Authentication authentication,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "releaseYear", required = false) Integer releaseYear,
+            @RequestParam(value = "coverImage", required = false) MultipartFile coverImage) {
         String email = authentication.getName();
-        return ResponseEntity.ok(albumService.createAlbum(email, dto));
+        return ResponseEntity.ok(albumService.createAlbum(email, title, description, releaseYear, coverImage));
     }
 
-    // --- View My Albums (Artist Only) ---
     @GetMapping("/my")
     public ResponseEntity<List<AlbumDTO>> getMyAlbums(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(albumService.getMyAlbums(email));
     }
 
-    // --- Update Album (Artist Only) ---
-    @PutMapping("/{albumId}")
-    public ResponseEntity<AlbumDTO> updateAlbum(@PathVariable Long albumId,
-                                                @RequestBody AlbumDTO dto) {
-        return ResponseEntity.ok(albumService.updateAlbum(albumId, dto));
+    // UPDATED: Consumes Multipart Data
+    @PutMapping(value = "/{albumId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AlbumDTO> updateAlbum(
+            @PathVariable Long albumId,
+            @RequestParam("title") String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "releaseYear", required = false) Integer releaseYear,
+            @RequestParam(value = "coverImage", required = false) MultipartFile coverImage) {
+        return ResponseEntity.ok(albumService.updateAlbum(albumId, title, description, releaseYear, coverImage));
     }
 
-    // --- Delete Album (Artist Only) ---
     @DeleteMapping("/{albumId}")
     public ResponseEntity<String> deleteAlbum(@PathVariable Long albumId) {
         albumService.deleteAlbum(albumId);
         return ResponseEntity.ok("{\"message\": \"Album deleted successfully\"}");
     }
 
-    // --- NEW: Add Song to Album (Artist Only) ---
     @PostMapping("/{albumId}/songs/{songId}")
     public ResponseEntity<String> addSongToAlbum(Authentication authentication,
                                                  @PathVariable Long albumId,
@@ -68,7 +73,6 @@ public class AlbumController {
         return ResponseEntity.ok("{\"message\": \"" + message + "\"}");
     }
 
-    // --- NEW: Remove Song from Album (Artist Only) ---
     @DeleteMapping("/{albumId}/songs/{songId}")
     public ResponseEntity<String> removeSongFromAlbum(Authentication authentication,
                                                       @PathVariable Long albumId,

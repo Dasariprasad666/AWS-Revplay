@@ -11,6 +11,7 @@ import com.example.demo.repository.ArtistRepository;
 import com.example.demo.repository.SongRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,13 +23,16 @@ public class AlbumService {
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
     private final SongRepository songRepository;
+    private final FileStorageService fileStorageService; // NEW: Inject FileStorageService
 
     public AlbumService(AlbumRepository albumRepository,
                         ArtistRepository artistRepository,
-                        SongRepository songRepository) {
+                        SongRepository songRepository,
+                        FileStorageService fileStorageService) { // Updated constructor
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.songRepository = songRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // --- Get Single Album with Tracklist ---
@@ -38,27 +42,28 @@ public class AlbumService {
         return mapToDTOWithSongs(album);
     }
 
-    // --- Create Album ---
-    public AlbumDTO createAlbum(String email, AlbumDTO dto) {
+    // --- Create Album (Now supports Image Upload) ---
+    public AlbumDTO createAlbum(String email, String title, String description, Integer releaseYear, MultipartFile coverImage) {
         Artist artist = artistRepository.findByUser_Email(email)
                 .orElseThrow(() -> new RuntimeException("Artist not found"));
 
         Album album = new Album();
-        album.setTitle(dto.getTitle());
-        album.setDescription(dto.getDescription());
-        album.setCoverImageUrl(dto.getCoverImageUrl());
+        album.setTitle(title);
+        album.setDescription(description);
         album.setArtist(artist);
 
-        // FIX: Convert the frontend's 4-digit releaseYear into a LocalDate (e.g., "2024-01-01")
-        if (dto.getReleaseYear() != null) {
-            album.setReleaseDate(LocalDate.of(dto.getReleaseYear(), 1, 1));
-        } else {
-            album.setReleaseDate(dto.getReleaseDate());
+        if (releaseYear != null) {
+            album.setReleaseDate(LocalDate.of(releaseYear, 1, 1));
+        }
+
+        // Save the uploaded image
+        if (coverImage != null && !coverImage.isEmpty()) {
+            String coverImageName = fileStorageService.storeFile(coverImage);
+            album.setCoverImageUrl(coverImageName);
         }
 
         albumRepository.save(album);
-        dto.setAlbumId(album.getAlbumId());
-        return mapToDTO(album); // Return cleanly mapped entity
+        return mapToDTO(album);
     }
 
     // --- View My Albums ---
@@ -72,27 +77,29 @@ public class AlbumService {
                 .toList();
     }
 
-    // --- Update Album ---
-    public AlbumDTO updateAlbum(Long albumId, AlbumDTO dto) {
+    // --- Update Album (Now supports Image Upload) ---
+    public AlbumDTO updateAlbum(Long albumId, String title, String description, Integer releaseYear, MultipartFile coverImage) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new RuntimeException("Album not found"));
 
-        album.setTitle(dto.getTitle());
-        album.setDescription(dto.getDescription());
-        album.setCoverImageUrl(dto.getCoverImageUrl());
+        album.setTitle(title);
+        album.setDescription(description);
 
-        // FIX: Convert the frontend's year during updates too
-        if (dto.getReleaseYear() != null) {
-            album.setReleaseDate(LocalDate.of(dto.getReleaseYear(), 1, 1));
-        } else {
-            album.setReleaseDate(dto.getReleaseDate());
+        if (releaseYear != null) {
+            album.setReleaseDate(LocalDate.of(releaseYear, 1, 1));
+        }
+
+        // Save the new image, optionally you could delete the old one here
+        if (coverImage != null && !coverImage.isEmpty()) {
+            String coverImageName = fileStorageService.storeFile(coverImage);
+            album.setCoverImageUrl(coverImageName);
         }
 
         albumRepository.save(album);
         return mapToDTO(album);
     }
 
-    // --- Delete Album (Only if no songs) ---
+    // --- Delete Album ---
     public void deleteAlbum(Long albumId) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new RuntimeException("Album not found"));
@@ -100,19 +107,22 @@ public class AlbumService {
         if (album.getSongs() != null && !album.getSongs().isEmpty()) {
             throw new RuntimeException("Cannot delete album. Songs exist.");
         }
+
+        // Delete the image file from storage if it exists
+        if (album.getCoverImageUrl() != null) {
+            fileStorageService.deleteFile(album.getCoverImageUrl());
+        }
+
         albumRepository.delete(album);
     }
 
-    // --- NEW: Add existing song to an album ---
+    // --- Add Song to Album ---
     @Transactional
     public String addSongToAlbum(String email, Long albumId, Long songId) {
-        Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
-        Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        Album album = albumRepository.findById(albumId).orElseThrow(() -> new ResourceNotFoundException("Album not found"));
+        Song song = songRepository.findById(songId).orElseThrow(() -> new ResourceNotFoundException("Song not found"));
 
-        if (!album.getArtist().getUser().getEmail().equals(email) ||
-                !song.getArtist().getUser().getEmail().equals(email)) {
+        if (!album.getArtist().getUser().getEmail().equals(email) || !song.getArtist().getUser().getEmail().equals(email)) {
             throw new RuntimeException("You can only modify your own albums and songs!");
         }
 
@@ -121,13 +131,11 @@ public class AlbumService {
         return "Song successfully added to the album!";
     }
 
-    // --- NEW: Remove song from an album ---
+    // --- Remove Song from Album ---
     @Transactional
     public String removeSongFromAlbum(String email, Long albumId, Long songId) {
-        Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new ResourceNotFoundException("Album not found"));
-        Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        Album album = albumRepository.findById(albumId).orElseThrow(() -> new ResourceNotFoundException("Album not found"));
+        Song song = songRepository.findById(songId).orElseThrow(() -> new ResourceNotFoundException("Song not found"));
 
         if (!album.getArtist().getUser().getEmail().equals(email)) {
             throw new RuntimeException("You can only modify your own albums!");
@@ -141,7 +149,7 @@ public class AlbumService {
         return "Song successfully removed from the album!";
     }
 
-    // NEW: Get All Albums (For Public Home Feed)
+    // --- Get All Albums (For Public Home Feed) ---
     public List<AlbumDTO> getAllAlbums() {
         return albumRepository.findAll()
                 .stream()
@@ -158,7 +166,6 @@ public class AlbumService {
         dto.setReleaseDate(album.getReleaseDate());
         dto.setCoverImageUrl(album.getCoverImageUrl());
 
-        // FIX: Extract the year from the LocalDate so Angular displays it perfectly!
         if (album.getReleaseDate() != null) {
             dto.setReleaseYear(album.getReleaseDate().getYear());
         }
