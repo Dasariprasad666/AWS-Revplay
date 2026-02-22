@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { AuthResponse } from '../../models/auth-response.model';
+import { environment } from '../../../../environments/environment'; 
+import { AuthResponse } from '../../models/auth-response.model';  
 
 @Injectable({
   providedIn: 'root'
@@ -28,8 +28,12 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/register`, userData, { responseType: 'text' });
   }
 
-  // --- Storage Helpers ---
+  // NEW: Forgot Password Method
+  forgotPassword(email: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email, newPassword });
+  }
 
+  // --- Storage Helpers ---
   private saveToken(token: string): void {
     localStorage.setItem('jwt_token', token);
   }
@@ -46,7 +50,6 @@ export class AuthService {
     return localStorage.getItem('user_role');
   }
 
-  // FIX: Added this method so AudioService and Home can safely check who is logged in!
   getUserName(): string | null {
     return localStorage.getItem('userName'); 
   }
