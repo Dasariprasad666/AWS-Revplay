@@ -81,4 +81,19 @@ public class AuthService {
         logger.info("Login successful for: {}", request.getEmail());
         return response;
     }
+
+    // NEW: Forgot Password (Instant Reset)
+    public String resetPassword(String email, String newPassword) {
+        logger.info("Attempting password reset for: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email not found."));
+
+        // Hash the new password before saving it to the database
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        logger.info("Password reset successfully for: {}", email);
+        return "Password successfully reset!";
+    }
 }
