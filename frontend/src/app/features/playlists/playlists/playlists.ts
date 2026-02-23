@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Playlist } from '../../../core/services/playlist/playlist';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-playlists',
@@ -17,11 +18,10 @@ export class Playlists implements OnInit {
   myPlaylists: any[] = [];
   showCreateModal: boolean = false;
   
-  //  NEW: Variables to track Edit Mode
   isEditing: boolean = false;
   editingPlaylistId: number | null = null;
+  selectedCoverImage: File | null = null; //  NEW: Track selected file
   
-  // Object to hold data when user types in the form
   newPlaylist = {
     name: '',
     description: '',
@@ -41,19 +41,19 @@ export class Playlists implements OnInit {
     });
   }
 
-  // --- Modal Controls ---
   openCreateModal() {
     this.isEditing = false;
     this.editingPlaylistId = null;
-    this.newPlaylist = { name: '', description: '', privacy: 'PUBLIC' }; // Clear form
+    this.selectedCoverImage = null; // Reset image
+    this.newPlaylist = { name: '', description: '', privacy: 'PUBLIC' }; 
     this.showCreateModal = true;
   }
 
-  //  NEW: Open modal in Edit Mode and pre-fill data
   openEditModal(event: Event, playlist: any) {
-    event.stopPropagation(); // Prevent routing to playlist details
+    event.stopPropagation(); 
     this.isEditing = true;
     this.editingPlaylistId = playlist.playlistId;
+    this.selectedCoverImage = null; // Reset image
     this.newPlaylist = { 
       name: playlist.name, 
       description: playlist.description || '', 
@@ -66,16 +66,28 @@ export class Playlists implements OnInit {
     this.showCreateModal = false;
   }
 
-  //  UPDATED: Handle both Create and Update
+  //  NEW: Capture file event
+  onFileSelected(event: any) {
+    if (event.target.files.length > 0) {
+      this.selectedCoverImage = event.target.files[0];
+    }
+  }
+
   savePlaylist() {
     if (!this.newPlaylist.name.trim()) {
       alert("Playlist name cannot be empty!");
       return;
     }
 
+    //  PACK IT INTO FORMDATA
+    const formData = new FormData();
+    formData.append('name', this.newPlaylist.name);
+    if (this.newPlaylist.description) formData.append('description', this.newPlaylist.description);
+    formData.append('privacy', this.newPlaylist.privacy);
+    if (this.selectedCoverImage) formData.append('coverImage', this.selectedCoverImage);
+
     if (this.isEditing && this.editingPlaylistId) {
-      // UPDATE LOGIC
-      this.playlistService.updatePlaylist(this.editingPlaylistId, this.newPlaylist).subscribe({
+      this.playlistService.updatePlaylist(this.editingPlaylistId, formData).subscribe({
         next: () => {
           this.fetchPlaylists(); 
           this.closeCreateModal(); 
@@ -83,8 +95,7 @@ export class Playlists implements OnInit {
         error: (err: any) => console.error('Failed to update playlist:', err)
       });
     } else {
-      // CREATE LOGIC
-      this.playlistService.createPlaylist(this.newPlaylist).subscribe({
+      this.playlistService.createPlaylist(formData).subscribe({
         next: () => {
           this.fetchPlaylists(); 
           this.closeCreateModal(); 
@@ -104,5 +115,14 @@ export class Playlists implements OnInit {
         error: (err: any) => console.error('Failed to delete playlist:', err)
       });
     }
+  }
+
+  getCoverImageUrl(fileName: string | null): string {
+    if (!fileName) return ''; 
+    return `${environment.apiUrl}/songs/image/${fileName}`;
+  }
+
+  onImageError(event: any) {
+    event.target.style.display = 'none';
   }
 }

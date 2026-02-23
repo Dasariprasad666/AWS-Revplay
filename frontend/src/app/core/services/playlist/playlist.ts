@@ -7,12 +7,11 @@ import { AuthService } from '../auth/auth';
 @Injectable({
   providedIn: 'root'
 })
-export class Playlist { //  Changed from PlaylistService to Playlist
+export class Playlist { 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private apiUrl = `${environment.apiUrl}/playlists`;
 
-  // Helper method to grab the token
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
@@ -22,7 +21,8 @@ export class Playlist { //  Changed from PlaylistService to Playlist
     return this.http.get<any>(`${this.apiUrl}/${playlistId}`, { headers: this.getHeaders() });
   }
 
-  createPlaylist(playlistData: { name: string, description: string, privacy: string }): Observable<any> {
+  // UPDATED: Accepts FormData
+  createPlaylist(playlistData: FormData): Observable<any> {
     return this.http.post<any>(this.apiUrl, playlistData, { headers: this.getHeaders() });
   }
 
@@ -34,7 +34,8 @@ export class Playlist { //  Changed from PlaylistService to Playlist
     return this.http.get<any[]>(`${this.apiUrl}/public`, { headers: this.getHeaders() });
   }
 
-  updatePlaylist(playlistId: number, playlistData: { name: string, description: string, privacy: string }): Observable<any> {
+  //  UPDATED: Accepts FormData
+  updatePlaylist(playlistId: number, playlistData: FormData): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${playlistId}`, playlistData, { headers: this.getHeaders() });
   }
 
