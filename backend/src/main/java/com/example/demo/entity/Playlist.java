@@ -1,8 +1,8 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
-import java.util.ArrayList; //  NEW import
-import java.util.List;      //  NEW import
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "playlists")
@@ -29,7 +29,6 @@ public class Playlist {
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 
-    // --- NEW: A playlist can have many songs! ---
     @ManyToMany
     @JoinTable(
             name = "playlist_songs",
@@ -59,7 +58,7 @@ public class Playlist {
     public String getCoverImageUrl() { return coverImageUrl; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
 
-    // --- NEW: Getters, Setters, and Helpers for Songs ---
+    // --- Getters, Setters, and Helpers for Songs ---
     public List<Song> getSongs() { return songs; }
     public void setSongs(List<Song> songs) { this.songs = songs; }
 
