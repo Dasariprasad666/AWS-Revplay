@@ -40,6 +40,9 @@ public class SecurityConfig {
                         // 1. Allow everyone to Login and Register
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // NEW: Allow Swagger UI and API Docs
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                         // 2. ONLY allow the audio streaming endpoint to be public!
                         // This allows the HTML <audio> tag to play music without a JWT token
                         .requestMatchers("/api/songs/play/**").permitAll()
