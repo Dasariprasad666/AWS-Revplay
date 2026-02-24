@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.SongDTO;
 import com.example.demo.service.SongService;
+import com.example.demo.service.FileStorageService;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.security.CustomUserDetailsService;
 
@@ -14,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-// --- THE FIX: Import Spring Security's testing token ---
 import org.springframework.security.authentication.TestingAuthenticationToken;
 
 import java.util.List;
@@ -34,6 +34,9 @@ class SongControllerTest {
 
     @MockitoBean
     private SongService songService;
+
+    @MockitoBean
+    private FileStorageService fileStorageService;
 
     @MockitoBean
     private JwtUtil jwtUtil;
@@ -62,8 +65,9 @@ class SongControllerTest {
     @Test
     void uploadSong_ReturnsOkStatus() throws Exception {
         // 1. Create fake files for the upload
+        // FIX: Changed "audioFile" to "file" to match what the Controller specifically asked for!
         MockMultipartFile audioFile = new MockMultipartFile(
-                "audioFile", "test.mp3", "audio/mpeg", "fake-audio-content".getBytes());
+                "file", "test.mp3", "audio/mpeg", "fake-audio-content".getBytes());
         MockMultipartFile coverImage = new MockMultipartFile(
                 "coverImage", "cover.jpg", "image/jpeg", "fake-image-content".getBytes());
 
@@ -74,7 +78,6 @@ class SongControllerTest {
         when(songService.uploadSong(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(savedSong);
 
-        // --- THE FIX: Create an official Spring Security authentication token for the test ---
         TestingAuthenticationToken mockAuth = new TestingAuthenticationToken("artist@test.com", "pass", "ROLE_ARTIST");
 
         // 3. Simulate a POST request with MULTIPART form data
@@ -85,7 +88,9 @@ class SongControllerTest {
                         .param("genre", "Rock")
                         .param("duration", "200")
                         .param("visibility", "PUBLIC")
-                        // Pass the official mockAuth object we just created
+                        .param("albumId", "1")
+                        .param("description", "Test")
+                        .param("artistId", "1")
                         .principal(mockAuth))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("New Upload"));

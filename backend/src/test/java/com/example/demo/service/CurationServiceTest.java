@@ -39,6 +39,7 @@ class CurationServiceTest {
 
         PlaylistRequest request = new PlaylistRequest();
         request.setName("Workout Vibes");
+        request.setDescription("Gym playlist");
         request.setPrivacy("PUBLIC");
 
         Playlist savedPlaylist = new Playlist();
@@ -50,8 +51,15 @@ class CurationServiceTest {
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
         when(playlistRepository.save(any(Playlist.class))).thenReturn(savedPlaylist);
 
-        // Act
-        PlaylistResponse response = curationService.createPlaylist("user@test.com", request);
+        // Act: FIX -> Pass the 5 parameters your new method expects in the EXACT order!
+        // (email MUST be first based on your CurationService logic)
+        PlaylistResponse response = curationService.createPlaylist(
+                "user@test.com",           // 1. Email (FIRST!)
+                request.getName(),         // 2. Title
+                request.getDescription(),  // 3. Description
+                request.getPrivacy(),      // 4. Privacy
+                null                       // 5. Image File
+        );
 
         // Assert
         assertNotNull(response);
