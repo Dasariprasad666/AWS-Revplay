@@ -28,7 +28,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/register`, userData, { responseType: 'text' });
   }
 
-  // 🌟 NEW: Forgot Password Method
+  // NEW: Forgot Password Method
   forgotPassword(email: string, newPassword: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/forgot-password`, { email, newPassword });
   }

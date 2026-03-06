@@ -5,7 +5,7 @@ import com.example.demo.dto.UserStatsDTO;
 import com.example.demo.entity.User;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.ArtistRepository;
-import com.example.demo.repository.LikedSongRepository; // 🌟 CHANGED: Using LikedSongRepository
+import com.example.demo.repository.LikedSongRepository; //  CHANGED: Using LikedSongRepository
 import com.example.demo.repository.PlaylistRepository;
 import com.example.demo.repository.SongRepository;
 import com.example.demo.repository.UserRepository;
