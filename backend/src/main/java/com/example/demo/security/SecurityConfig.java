@@ -79,7 +79,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         //  Here is the magic fix! We added your AWS IP address to the VIP list.
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://16.171.141.25"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://13.53.175.84"));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
